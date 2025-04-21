@@ -5,6 +5,7 @@ ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
 require_once 'services/ProductoService.php';
+require_once 'services/View.php';
 
 class ProductoController {
     private $productoService;
@@ -21,7 +22,7 @@ class ProductoController {
         //}
 
         include $_SERVER['DOCUMENT_ROOT'] . '/jabones/views/productos/listar.php';
-
+        
     }
     
     public function editarProducto($id) {
@@ -30,16 +31,29 @@ class ProductoController {
         if (isset($producto['error'])) {
             die($producto['error']);
         }
-    
+        //extract($producto);
         // Lo pasas tal cual como variable
         include $_SERVER['DOCUMENT_ROOT'] . '/jabones/views/productos/editar.php';
+        //include 'views/productos/editar.php';
+        //View::render('productos/editar', [
+        //    'producto' => $producto
+        //]);
     }
     
 
-    public function actualizarProducto($data) {
+    public function actualizarProducto() {
+        $data = $_POST;
         $resultado = $this->productoService->actualizarProducto($data);
-
-        return $resultado;
+    
+        if (isset($resultado['error'])) {
+            $error = $resultado['error'];
+            $producto = $this->productoService->obtenerProducto($data['id']);
+            include $_SERVER['DOCUMENT_ROOT'] . '/jabones/views/productos/editar.php';
+        } else {
+            $mensaje = "Producto actualizado correctamente.";
+            $producto = $this->productoService->obtenerProducto($data['id']);
+            include $_SERVER['DOCUMENT_ROOT'] . '/jabones/views/productos/editar.php';
+        }
     }
 }
 ?>

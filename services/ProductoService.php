@@ -9,36 +9,15 @@ class ProductoService {
     }
 
     public function listarProductos() {
-        // Obtener lista de productos desde el API
-        ob_start(); // Captura la salida del controlador
-        $this->apiController->handleRequest('listar');
-        $response = ob_get_clean(); // Capturamos la salida generada
-        $productos = json_decode($response, true);
-
-        return $productos;
+        return $this->apiController->listarProductos();
     }
-    public function obtenerProducto($id) {
-        // Obtener el producto desde el API
-        $_GET['id'] = $id;
-        ob_start(); // Captura la salida
-        $this->apiController->handleRequest('obtener');
-        $response = ob_get_clean(); // Capturamos la salida generada
-        $producto = json_decode($response, true);
 
-        return $producto;
+    public function obtenerProducto($id) {
+        return $this->apiController->obtenerProductoPorId($id);
     }
 
     public function actualizarProducto($data) {
-        // Actualizar el producto a través del API
-        $_GET['id'] = $data['id'];
-        $_POST = $data; // Datos a actualizar
-
-        ob_start(); // Captura la salida
-        $this->apiController->handleRequest('actualizar');
-        $response = ob_get_clean();
-        $resultado = json_decode($response, true);
-
-        return $resultado;
+        $id = $data['id'];
+        return $this->apiController->actualizarProductoPorId($id, $data);
     }
 }
-?>
