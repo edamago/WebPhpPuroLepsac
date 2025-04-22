@@ -20,4 +20,9 @@ class ProductoService {
         $id = $data['id'];
         return $this->apiController->actualizarProductoPorId($id, $data);
     }
+
+    public function eliminarProducto($data) {
+        $id = $data['id'];
+        return $this->apiController->eliminarProducto($id);
+    }
 }

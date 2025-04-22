@@ -14,6 +14,16 @@ class ProductoController {
         $this->productoService = new ProductoService();
     }
 
+    public function crear() {
+        //$productos = $this->productoService->listarProductos();
+
+        //if (isset($productos['error'])) {
+        //    die($productos['error']);
+        //}
+
+        include $_SERVER['DOCUMENT_ROOT'] . '/jabones/views/productos/agregar.php';
+        
+    }
     public function listarProductos() {
         //$productos = $this->productoService->listarProductos();
 
@@ -55,5 +65,18 @@ class ProductoController {
             include $_SERVER['DOCUMENT_ROOT'] . '/jabones/views/productos/editar.php';
         }
     }
+
+    public function eliminarProducto($id) {
+        // Pasar el $id directamente a la función del servicio
+        $resultado = $this->productoService->eliminarProducto(['id' => $id]);
+        
+        if (isset($resultado['error'])) {
+            die($resultado['error']);
+        }
+        
+        // Redirigir a la lista de productos (o incluir la vista si es necesario)
+        include $_SERVER['DOCUMENT_ROOT'] . '/jabones/views/productos/listar.php';
+    }
+    
 }
 ?>

@@ -2,13 +2,11 @@
 <div class="container mt-5">
     <h2 class="text-primary">Editar Producto</h2>
 
-    <?php if (isset($mensaje)): ?>
-        <div class="alert alert-success"><?= $mensaje ?></div>
-    <?php elseif (isset($error)): ?>
-        <div class="alert alert-danger"><?= $error ?></div>
-    <?php endif; ?>
+    <!-- Contenedor para mensajes dinámicos con JS -->
+    <div id="mensaje" class="mt-3"></div>
 
-    <form action="index.php?action=actualizar" method="POST">
+    <form id="form-producto">
+        <!-- Campo oculto para el ID del producto -->
         <input type="hidden" name="id" value="<?= htmlspecialchars($producto['id']) ?>">
 
         <div class="row">
@@ -83,5 +81,8 @@
         <a href="index.php?action=listarproductos" class="btn btn-secondary mt-4">Cancelar</a>
     </form>
 </div>
+
+<!-- Enlazamos el JS de edición -->
+<script src="public/js/producto-editar.js"></script>
 
 <?php include 'views/layout/footer.php'; ?>

@@ -80,7 +80,7 @@
         </div>
 
         <button type="submit" class="btn btn-success mt-4">Guardar producto</button>
-        <a href="index.php" class="btn btn-secondary mt-4">Cancelar</a>
+        <a href="index.php?action=listarproductos" class="btn btn-secondary mt-4">Cancelar</a>
     </form>
 
     <div id="mensaje" class="mt-3"></div>

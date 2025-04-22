@@ -3,18 +3,19 @@ require_once '../../../models/ProductoModel.php';
 
 header('Content-Type: application/json');
 
-//$data = json_decode(file_get_contents("php://input"), true);
-$data = $_POST;
+// Obtener el ID desde la URL (query string)
+$id = $_GET['id'] ?? null;
 
-
-if (!isset($data['id'])) {
+if (!$id) {
     echo json_encode(['error' => 'ID no proporcionado']);
     exit;
 }
 
-$producto = new Producto();
-// Depuración
-$camposRequeridos = ['id','codigo','descripcion','unidad_medida','stock_minimo','stock_maximo','peso_bruto','peso_neto','alto','ancho','profundo','clasif_demanda','clasif_comercial','comentarios','estado','activo'];
+// Obtener los datos del cuerpo de la solicitud (JSON)
+$data = json_decode(file_get_contents("php://input"), true);
+
+// Verificar si todos los campos requeridos están presentes
+$camposRequeridos = ['codigo', 'descripcion', 'unidad_medida', 'stock_minimo', 'stock_maximo', 'peso_bruto', 'peso_neto', 'alto', 'ancho', 'profundo', 'clasif_demanda', 'clasif_comercial', 'comentarios', 'estado', 'activo'];
 
 $faltantes = [];
 foreach ($camposRequeridos as $campo) {
@@ -27,14 +28,10 @@ if (!empty($faltantes)) {
     echo json_encode(['error' => 'Campos faltantes: ' . implode(', ', $faltantes)]);
     exit;
 }
-$exito = $producto->actualizar($data['id'], $data);
 
-/*$exito = $producto->actualizar(
-    $data['id'],$data['codigo'], $data['descripcion'], $data['unidad_medida'], $data['stock_minimo'],
-    $data['stock_maximo'], $data['peso_bruto'], $data['peso_neto'],
-    $data['alto'], $data['ancho'], $data['profundo'], $data['clasif_demanda'],
-    $data['clasif_comercial'], $data['comentarios'], $data['estado'],
-    $data['activo']
-);*/
+// Crear una instancia del modelo y realizar la actualización
+$producto = new Producto();
+$exito = $producto->actualizar($id, $data);
 
+// Responder con el resultado de la actualización
 echo json_encode(['success' => $exito]);

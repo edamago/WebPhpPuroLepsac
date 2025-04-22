@@ -58,7 +58,7 @@ switch ($action) {
 
     case 'eliminar':
         $controller = new ProductoController();
-        $controller->eliminar($id);
+        $controller->eliminarProducto($id);
         break;
 
     case 'loginform':
