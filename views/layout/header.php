@@ -26,7 +26,7 @@
         <div class="list-group">
             <a href="index.php" class="list-group-item list-group-item-action">Inicio</a>
             <a href="index.php?action=crearusuarioform" class="list-group-item list-group-item-action">Usuarios</a>
-            <a href="" class="list-group-item list-group-item-action">Clientes</a>
+            <a href="index.php" class="list-group-item list-group-item-action">Clientes</a>
             <a href="index.php?action=listarproductos" class="list-group-item list-group-item-action">Listar Productos</a>
             <a href="index.php?action=logout" class="list-group-item list-group-item-action text-danger">Cerrar Sesión</a>
         </div>

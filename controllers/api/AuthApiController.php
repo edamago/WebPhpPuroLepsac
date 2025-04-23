@@ -1,13 +1,12 @@
 <?php
 require_once __DIR__ . '/../../config/Database.php';
 
-
 class AuthApiController {
     private $conn;
 
     public function __construct() {
-        $db = new Database();
-        $this->conn = $db->connect();
+        // Usar el método getInstance() para obtener la instancia y luego llamar a getConnection()
+        $this->conn = Database::getInstance()->getConnection();
     }
 
     public function login() {

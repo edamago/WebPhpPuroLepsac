@@ -6,8 +6,8 @@ class Producto {
     private $table = "t_producto";
 
     public function __construct() {
-        $database = new Database();
-        $this->conn = $database->connect();
+        $database = Database::getInstance();
+        $this->conn = $database->getConnection();
     }
 
     public function listar() {
@@ -23,27 +23,37 @@ class Producto {
     }
 
     public function insertar($data) {
-        $stmt = $this->conn->prepare("INSERT INTO $this->table 
-            (codigo, descripcion, unidad_medida, stock_minimo, stock_maximo, peso_bruto, peso_neto, alto, ancho, profundo, clasif_demanda, clasif_comercial, comentarios, estado, activo)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-    
-        return $stmt->execute([
-            $data['codigo'],
-            $data['descripcion'],
-            $data['unidad_medida'],
-            $data['stock_minimo'],
-            $data['stock_maximo'],
-            $data['peso_bruto'],
-            $data['peso_neto'],
-            $data['alto'],
-            $data['ancho'],
-            $data['profundo'],
-            $data['clasif_demanda'],
-            $data['clasif_comercial'],
-            $data['comentarios'],
-            $data['estado'],
-            $data['activo']
-        ]);
+        try {
+            $stmt = $this->conn->prepare("INSERT INTO $this->table 
+                (codigo, descripcion, unidad_medida, stock_minimo, stock_maximo, peso_bruto, peso_neto, alto, ancho, profundo, clasif_demanda, clasif_comercial, comentarios, estado, activo)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+
+            $resultado = $stmt->execute([
+                $data['codigo'],
+                $data['descripcion'],
+                $data['unidad_medida'],
+                $data['stock_minimo'],
+                $data['stock_maximo'],
+                $data['peso_bruto'],
+                $data['peso_neto'],
+                $data['alto'],
+                $data['ancho'],
+                $data['profundo'],
+                $data['clasif_demanda'],
+                $data['clasif_comercial'],
+                $data['comentarios'],
+                $data['estado'],
+                $data['activo']
+            ]);
+
+            return $resultado;
+        } catch (PDOException $e) {
+            if ($e->getCode() == '23000') { // Código de error SQLSTATE para violación de clave única
+                return ['error' => 'El código del producto ya existe.'];
+            }
+            error_log($e->getMessage());
+            return ['error' => 'Error al insertar el producto.'];
+        }
     }
     
 

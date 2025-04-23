@@ -1,0 +1,18 @@
+{
+    "name": "martel/pro",
+    "description": "aplicacion web con mysql",
+    "autoload": {
+        "psr-4": {
+            "Martel\\Pro\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "edamago",
+            "email": "daniel.martel@outlook.com"
+        }
+    ],
+    "require": {
+        "vlucas/phpdotenv": "^5.6"
+    }
+}

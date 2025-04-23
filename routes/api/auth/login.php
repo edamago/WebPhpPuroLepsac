@@ -1,10 +1,19 @@
 <?php
-header('Content-Type: application/json');
 require_once '../../../controllers/api/AuthApiController.php';
 
-$data = json_decode(file_get_contents('php://input'), true);
+header('Content-Type: application/json');
 
-$controller = new AuthApiController();
-$response = $controller->login($data);
+$input = json_decode(file_get_contents("php://input"), true);
+$usuario = $input['usuario'] ?? '';
+$clave = $input['clave'] ?? '';
+
+if (empty($usuario) || empty($clave)) {
+    http_response_code(400);
+    echo json_encode(['error' => 'Usuario y contraseña son requeridos']);
+    exit;
+}
+
+$authController = new AuthApiController();
+$response = $authController->login($usuario, $clave);
 
 echo json_encode($response);

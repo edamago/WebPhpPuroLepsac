@@ -1,4 +1,4 @@
-<?php
+-<?php
 require_once 'controllers/api/ProductoApiController.php';
 
 class ProductoService {
@@ -26,3 +26,4 @@ class ProductoService {
         return $this->apiController->eliminarProducto($id);
     }
 }
+

@@ -3,14 +3,19 @@ require_once 'config/Database.php';
 
 class AuthController {
     public function login() {
-        session_start();
-        //var_dump($_POST);  // Verifica qué datos están llegando
-        //exit();  // ⚠️ Detiene la ejecución y solo muestra el var_dump
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+
         $usuario = $_POST['usuario'] ?? '';
         $clave = $_POST['clave'] ?? '';
 
-        $db = new Database();
-        $conn = $db->connect();
+        $db = Database::getInstance();
+        $conn = $db->getConnection();
+        if (!$conn) {
+            echo "<div style='color: red; text-align: center;'>Error de conexión a la base de datos</div>";
+            exit;
+        }
 
         $stmt = $conn->prepare("SELECT * FROM t_usuario WHERE usuario = ?");
         $stmt->execute([$usuario]);
@@ -18,7 +23,7 @@ class AuthController {
 
         if ($user && password_verify($clave, $user['password'])) {
             $_SESSION['usuario'] = $user['usuario'];
-            $_SESSION['ultimo_acceso'] = time();  // Guarda el tiempo actual
+            $_SESSION['ultimo_acceso'] = time();
             header("Location: index.php");
         } else {
             echo "<script>alert('Usuario o contraseña incorrecta'); window.location='index.php?action=loginform';</script>";
@@ -26,10 +31,12 @@ class AuthController {
     }
 
     public function logout() {
-        session_start(); // Inicia la sesión
-        session_unset(); // Elimina todas las variables de sesión
-        session_destroy(); // Destruye la sesión
-        header("Location: index.php?action=loginform"); // Redirige a la página de login
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+        session_unset();
+        session_destroy();
+        header("Location: index.php?action=loginform");
         exit();
     }
     

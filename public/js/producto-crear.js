@@ -14,14 +14,19 @@ document.addEventListener("DOMContentLoaded", function () {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
         })
-        .then(res => res.json())
+        .then(res => {
+            if (!res.ok) {
+                throw new Error(`HTTP error! status: ${res.status}`);
+            }
+            return res.json();
+        })
         .then(respuesta => {
             if (respuesta.success) {
-                mensaje.innerHTML = `<div class="alert alert-success">Producto registrado correctamente. Redirigiendo...</div>`;
+                mensaje.innerHTML = `<div class="alert alert-success">Producto registrado correctamente. Redirigiendo. ojo..</div>`;
                 
                 // Redirigir después de 2 segundos
                 setTimeout(() => {
-                    window.location.href = 'index.php';
+                    window.location.href = 'index.php?action=listarproductos';
                 }, 2000);
 
             } else {
@@ -30,7 +35,7 @@ document.addEventListener("DOMContentLoaded", function () {
         })
         .catch(err => {
             console.error("Error al registrar producto", err);
-            mensaje.innerHTML = `<div class="alert alert-danger">Error al registrar producto.</div>`;
+            mensaje.innerHTML = `<div class="alert alert-danger">Error al registrar producto. Verifica la consola para más detalles.</div>`;
         });
     });
 });

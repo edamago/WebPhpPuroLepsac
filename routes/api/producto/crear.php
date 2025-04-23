@@ -11,9 +11,15 @@ if (!$data) {
 }
 
 $producto = new Producto();
-$exito = $producto->insertar($data); // <-- aquí se pasa como un array
+$resultado = $producto->insertar($data);
 
-if ($exito) {
+if (is_array($resultado) && isset($resultado['error'])) {
+    http_response_code(400); // Código de error para solicitud incorrecta
+    echo json_encode(['success' => false, 'message' => $resultado['error']]);
+    exit;
+}
+
+if ($resultado) {
     echo json_encode(['success' => true, 'mensaje' => 'Producto creado correctamente']);
 } else {
     http_response_code(500);

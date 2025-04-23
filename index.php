@@ -46,7 +46,7 @@ switch ($action) {
         $controller->guardar();
         break;
 
-    case 'editar':
+    case 'editarproductoform':
         $controller = new ProductoController();
         $controller->editarProducto($id);
         break;
@@ -56,7 +56,7 @@ switch ($action) {
         $controller->actualizarProducto();
         break;
 
-    case 'eliminar':
+    case 'eliminarproducto':
         $controller = new ProductoController();
         $controller->eliminarProducto($id);
         break;

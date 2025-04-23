@@ -1,17 +1,20 @@
+<?php include 'views/layout/header.php'; ?>
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Crear Usuario</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de Productos</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body class="bg-light">
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-4">
+<div class="container d-flex align-items-center justify-content-center vh-100">
+    <div class="row w-100 justify-content-center">
+        <div class="col-12 col-sm-8 col-md-6 col-lg-4">
             <div class="card shadow">
-                <div class="card-header bg-success text-white">
-                    <h4 class="mb-0">Nuevo Usuario</h4>
+                <div class="card-header bg-primary text-white text-center">
+                    <h4 class="mb-0">Crear Usuario</h4>
                 </div>
                 <div class="card-body">
                     <form action="index.php?action=crearusuario" method="POST">
@@ -48,15 +51,17 @@
                                 Activo
                             </label>
                         </div>
-                        <button type="submit" class="btn btn-success w-100">Registrar</button>
-                        <div class="mt-2 text-center">
-                            <a href="index.php" class="btn btn-link">Volver</a>
-                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Crear Usuario</button>
                     </form>
+
+                    <div class="mt-3 text-center">
+                        
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+<?php include 'views/layout/footer.php'; ?>
 </body>
 </html>
