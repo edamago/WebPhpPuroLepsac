@@ -8,6 +8,12 @@ class UsuarioModel {
         $this->conn = Database::getInstance()->getConnection();
     }
 
+    public function obtenerUsuarios() {
+        $stmt = $this->conn->prepare("SELECT * FROM t_usuario");
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
     // Obtener usuario por nombre de usuario
     public function obtenerUsuarioPorNombre($usuario) {
         $stmt = $this->conn->prepare("SELECT * FROM t_usuario WHERE usuario = ?");

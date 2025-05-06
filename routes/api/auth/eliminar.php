@@ -1,6 +1,7 @@
 <?php
 header('Content-Type: application/json');
-require_once '../../../controllers/api/AuthApiController.php';
+//require_once '../../../controllers/api/AuthApiController.php';
+require_once $_SERVER['DOCUMENT_ROOT'] . '/pro/controllers/api/AuthApiController.php';
 
 $headers = getallheaders();
 $controller = new AuthApiController();

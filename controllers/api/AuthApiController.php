@@ -60,6 +60,22 @@ class AuthApiController {
         }
     }
 
+    public function listarUsuarios() {
+        try {
+            // Aquí puedes llamar al modelo que maneja la base de datos y obtener todos los usuarios
+            $usuarios = $this->usuarioModel->obtenerUsuarios();
+
+            // Verificar si se encontraron usuarios
+            if (!empty($usuarios)) {
+                echo json_encode(['success' => true, 'usuarios' => $usuarios]);
+            } else {
+                echo json_encode(['success' => false, 'message' => 'No se encontraron usuarios']);
+            }
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['error' => 'Error al listar usuarios', 'details' => $e->getMessage()]);
+        }
+    }
     public function crearUsuario($input, $token) {
         header('Content-Type: application/json');
 
@@ -103,37 +119,18 @@ class AuthApiController {
         exit;
     }
 
-    public function modificarUsuario($input, $token) {
-        header('Content-Type: application/json');
-    
-        // Verificar el token antes de continuar
-        $usuarioAutenticado = $this->verificar_token($token);
-        if (!$usuarioAutenticado) {
-            http_response_code(401);
-            echo json_encode(['error' => 'Acceso no autorizado']);
-            exit;
+    public function modificarUsuario($id, $nombre, $correo, $usuario, $estado, $activo) {
+        // Verificar que el ID no esté vacío
+        if (!$id) {
+            return ['error' => 'El ID del usuario es requerido'];
         }
     
-        // Obtener los datos del input
-        $id = $input['id'] ?? null;
-        $nombre = $input['nombre'] ?? '';
-        $correo = $input['correo'] ?? '';
-        $estado = $input['estado'] ?? 'A';
-        $usuario = $input['usuario'] ?? '';
-        $activo = isset($input['activo']) ? (int)$input['activo'] : 1;
-    
-        if (!$id || empty($nombre) || empty($correo) || empty($usuario)) {
-            http_response_code(400);
-            echo json_encode(['error' => 'Todos los campos requeridos deben estar presentes']);
-            exit;
-        }
-    
-        // Preparar los datos como un array
+        // Preparar los datos para la modificación
         $data = [
             'nombre' => $nombre,
             'correo' => $correo,
-            'estado' => $estado,
             'usuario' => $usuario,
+            'estado' => $estado,
             'activo' => $activo
         ];
     
@@ -141,19 +138,17 @@ class AuthApiController {
             // Llamar al modelo para modificar el usuario
             $resultado = $this->usuarioModel->modificarUsuario($id, $data);
     
+            // Verificar el resultado de la modificación
             if ($resultado) {
-                echo json_encode(['success' => true, 'message' => 'Usuario modificado correctamente']);
+                return ['success' => true, 'message' => 'Usuario modificado correctamente'];
             } else {
-                http_response_code(404);
-                echo json_encode(['error' => 'No se encontró el usuario para modificar']);
+                return ['error' => 'No se encontró el usuario para modificar'];
             }
         } catch (PDOException $e) {
-            http_response_code(500);
-            echo json_encode(['error' => 'Error al modificar el usuario']);
+            return ['error' => 'Error al modificar el usuario: ' . $e->getMessage()];
         }
-    
-        exit;
     }
+    
     
     
     // Eliminar usuario por ID

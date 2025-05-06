@@ -1,27 +1,42 @@
 <?php
+require_once $_SERVER['DOCUMENT_ROOT'] . '/pro/controllers/api/AuthApiController.php';
+
+
 header('Content-Type: application/json');
-require_once '../../../controllers/api/AuthApiController.php';
 
-$headers = getallheaders();
-$data = json_decode(file_get_contents('php://input'), true);
+// Obtener el ID desde la URL
+$id = $_GET['id'] ?? null;
 
-$controller = new AuthApiController();
-
-// Validar el token antes de continuar
-if (!isset($headers['Authorization'])) {
-    http_response_code(401);
-    echo json_encode(['error' => 'Token no proporcionado']);
+// Verificar que el ID esté presente
+if (!$id) {
+    http_response_code(400);
+    echo json_encode(['error' => 'El ID del usuario es requerido']);
     exit;
 }
 
-$token = str_replace('Bearer ', '', $headers['Authorization']);
-$usuarioAutenticado = $controller->verificar_token($token);
+// Obtener los datos del cuerpo de la solicitud (JSON)
+$input = json_decode(file_get_contents("php://input"), true);
 
-if (!$usuarioAutenticado) {
-    http_response_code(401);
-    echo json_encode(['error' => 'Token no válido']);
+// Verificar que los datos requeridos estén presentes
+$nombre = $input['nombre'] ?? '';
+$correo = $input['correo'] ?? '';
+$usuario = $input['usuario'] ?? '';
+$estado = $input['estado'] ?? 'A';
+$activo = isset($input['activo']) ? (int)$input['activo'] : 1;
+
+if (empty($nombre) || empty($correo) || empty($usuario)) {
+    http_response_code(400);
+    echo json_encode(['error' => 'Todos los campos requeridos deben estar presentes']);
     exit;
 }
 
-// Si el token es válido, continuar con la modificación
-$controller->modificarUsuario($data, $token);
+// Crear una instancia del controlador
+$authController = new AuthApiController();
+
+// Llamar al método para modificar el usuario
+$response = $authController->modificarUsuario($id, $nombre, $correo, $usuario, $estado, $activo);
+
+// Devolver la respuesta en formato JSON
+echo json_encode($response);
+?>
+

@@ -4,12 +4,8 @@ $api_prefix = '/pro/api/';
 
 if (strpos($request_uri, $api_prefix) === 0) {
     $uri = str_replace('/pro/api', '', $request_uri);
-    $uri = trim($uri, '/'); // Quita barras iniciales y finales
+    $uri = trim($uri, '/');
     $method = $_SERVER['REQUEST_METHOD'];
-
-    //echo "Request URI: " . $request_uri . "<br />";
-    //echo "REQUEST_METHOD: " . $method . "<br />";
-    //echo "URI después de eliminar '/pro/api': " . $uri . "<br />";
 
     $segments = explode('/', $uri);
 
@@ -46,6 +42,39 @@ if (strpos($request_uri, $api_prefix) === 0) {
                 break;
             default:
                 echo json_encode(['error' => 'Método no soportado']);
+        }
+    } elseif ($segments[0] === 'auth') {
+        $action = $segments[1] ?? null;
+        $id = $segments[2] ?? null;
+
+        switch ($action) {
+            case 'login':
+                require_once 'routes/api/auth/login.php';
+                break;
+            case 'crear':
+                if ($method === 'POST') {
+                    require_once 'routes/api/auth/crear.php';
+                }
+                break;
+            case 'modificar':
+                if ($method === 'PUT' && $id) {
+                    $_GET['id'] = $id;
+                    require_once 'routes/api/auth/modificar.php';
+                }
+                break;
+            case 'eliminar':
+                if ($method === 'DELETE' && $id) {
+                    $_GET['id'] = $id;
+                    require_once 'routes/api/auth/eliminar.php';
+                }
+                break;
+            case 'listar':
+                if ($method === 'GET') {
+                    require_once 'routes/api/auth/listar.php';
+                }
+                break;
+            default:
+                echo json_encode(['error' => 'Acción no reconocida en auth']);
         }
     } else {
         http_response_code(404);
