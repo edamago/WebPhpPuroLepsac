@@ -1,27 +1,19 @@
 <?php
-require_once '../../../models/ProductoModel.php';
+// Usar $_SERVER['DOCUMENT_ROOT'] para obtener la ruta completa del archivo
+require_once $_SERVER['DOCUMENT_ROOT'] . '/pro/controllers/api/ProductoApiController.php';
 
-header('Content-Type: application/json');
-
+// Obtener datos JSON enviados
 $data = json_decode(file_get_contents("php://input"), true);
 
+// Validar si los datos son correctos
 if (!$data) {
     echo json_encode(['error' => 'Datos inválidos']);
     exit;
 }
 
-$producto = new Producto();
-$resultado = $producto->insertar($data);
+// Crear una instancia del controlador
+$productoApiController = new ProductoApiController();
 
-if (is_array($resultado) && isset($resultado['error'])) {
-    http_response_code(400); // Código de error para solicitud incorrecta
-    echo json_encode(['success' => false, 'message' => $resultado['error']]);
-    exit;
-}
-
-if ($resultado) {
-    echo json_encode(['success' => true, 'mensaje' => 'Producto creado correctamente']);
-} else {
-    http_response_code(500);
-    echo json_encode(['success' => false, 'mensaje' => 'Error al crear el producto']);
-}
+// Llamar al método de manejar la solicitud de creación de producto
+$productoApiController->handleRequest('crear');
+?>

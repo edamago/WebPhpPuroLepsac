@@ -23,7 +23,5 @@ if (!$usuarioAutenticado) {
     exit;
 }
 
-// Si el token es válido, continuar con la creación
-$response = $controller->crearUsuario($data, $token);
-echo json_encode($response);
-
+// Si el token es válido, continuar con la modificación
+$controller->modificarUsuario($data, $token);

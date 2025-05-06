@@ -20,5 +20,7 @@ return [
         'name' => $_ENV['DB_NAME'] ?? 'bdempresa',
         'user' => $_ENV['DB_USER'] ?? 'root',
         'password' => $_ENV['DB_PASSWORD'] ?? ''
-    ]
+    ],
+    'jwt_secret' => $_ENV['JWT_SECRET'] ?? 'tu_clave_secreta_predeterminada' // Clave secreta para JWT
 ];
+

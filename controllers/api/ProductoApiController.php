@@ -1,5 +1,9 @@
 <?php
 require_once 'models/ProductoModel.php';
+//use Firebase\JWT\JWT;
+use Firebase\JWT\JWT;
+use Firebase\JWT\Key;
+use Firebase\JWT\ExpiredException;
 
 class ProductoApiController {
     private $model;
@@ -22,6 +26,10 @@ class ProductoApiController {
     }
 
     public function actualizarProductoPorId($id, $data) {
+        $productoExistente = $this->model->obtenerPorCodigo($data['codigo']);
+        if ($productoExistente && $productoExistente['id'] != $id) {
+            return ["error" => "El código del producto ya está en uso por otro producto."];
+        }
         return $this->model->actualizar($id, $data);
     }
 
@@ -29,9 +37,45 @@ class ProductoApiController {
         return $this->model->eliminar($id);
     }
 
+    // ✅ Validar token desde el header
+    public function validarToken() {
+        // Obtener los headers de la petición
+        $headers = getallheaders();
+        $authHeader = $headers['Authorization'] ?? $headers['authorization'] ?? null;
+    
+        if (!$authHeader || !str_starts_with($authHeader, 'Bearer ')) {
+            http_response_code(401);
+            echo json_encode(['error' => 'Token no proporcionado o mal formado']);
+            exit;
+        }
+    
+        // Extraer el token quitando 'Bearer '
+        $token = trim(str_replace('Bearer', '', $authHeader));
+    
+        try {
+            $config = include __DIR__ . '/../../config/config.php';
+            $jwt_secret = $config['jwt_secret'];
+    
+            $decoded = JWT::decode($token, new Key($jwt_secret, 'HS256'));
+    
+            return $decoded; // Retorna el payload si es necesario usarlo luego
+        } catch (ExpiredException $e) {
+            http_response_code(401);
+            echo json_encode(['error' => 'Token expirado']);
+            exit;
+        } catch (Exception $e) {
+            http_response_code(401);
+            echo json_encode(['error' => 'Token no válido']);
+            exit;
+        }
+    }
+
     // Manejo de API (respuestas JSON para solicitudes HTTP)
     public function handleRequest($action) {
         header('Content-Type: application/json');
+
+        // ✅ Validación de token antes de todo
+        $this->validarToken();
 
         switch ($action) {
             case 'listar':
@@ -57,10 +101,15 @@ class ProductoApiController {
                 if (empty($data['codigo']) || empty($data['descripcion'])) {
                     $this->error("Datos incompletos", 400);
                 } else {
-                    if ($this->insertarProducto($data)) {
-                        echo json_encode(["mensaje" => "Producto creado"]);
+                    $productoExistente = $this->model->obtenerPorCodigo($data['codigo']);
+                    if ($productoExistente) {
+                        $this->error("El producto con este código ya existe", 400);
                     } else {
-                        $this->error("Error al crear el producto", 500);
+                        if ($this->insertarProducto($data)) {
+                            echo json_encode(["mensaje" => "Producto creado"]);
+                        } else {
+                            $this->error("Error al crear el producto", 500);
+                        }
                     }
                 }
                 break;
@@ -74,10 +123,11 @@ class ProductoApiController {
                     if (empty($data)) {
                         $this->error("Datos incompletos para actualizar", 400);
                     } else {
-                        if ($this->actualizarProductoPorId($id, $data)) {
-                            echo json_encode(["mensaje" => "Producto actualizado"]);
+                        $resultado = $this->actualizarProductoPorId($id, $data);
+                        if (isset($resultado['error'])) {
+                            $this->error($resultado['error'], 400);
                         } else {
-                            $this->error("Error al actualizar el producto", 500);
+                            echo json_encode(["mensaje" => "Producto actualizado"]);
                         }
                     }
                 }

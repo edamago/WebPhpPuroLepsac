@@ -22,6 +22,22 @@ class Producto {
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
+    public function obtenerPorCodigo($codigo) {
+        $stmt = $this->conn->prepare("SELECT * FROM $this->table WHERE codigo = ?");
+        $stmt->execute([$codigo]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    // Validar si el código ya existe (excluyendo el producto actual si es una actualización)
+    public function verificarCodigoExistente($codigo, $idExcluido = null) {
+        // Consulta para verificar si el código ya está en uso por otro producto
+        $query = "SELECT COUNT(*) FROM $this->table WHERE codigo = ? AND id != ?";
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute([$codigo, $idExcluido]);
+        $resultado = $stmt->fetchColumn();
+        return $resultado > 0; // Si hay productos con el mismo código, retorna true
+    }
+
     public function insertar($data) {
         try {
             $stmt = $this->conn->prepare("INSERT INTO $this->table 
@@ -55,9 +71,14 @@ class Producto {
             return ['error' => 'Error al insertar el producto.'];
         }
     }
-    
 
     public function actualizar($id, $data) {
+        // Validamos si el código ya está en uso por otro producto
+        if ($this->verificarCodigoExistente($data['codigo'], $id)) {
+            return ['error' => 'El código del producto ya está en uso.'];
+        }
+
+        // Si el código es único, se realiza la actualización
         $sql = "UPDATE $this->table SET 
             codigo = ?, 
             descripcion = ?, unidad_medida = ?, stock_minimo = ?, stock_maximo = ?, 
@@ -66,7 +87,7 @@ class Producto {
             WHERE id = ?";
     
         $stmt = $this->conn->prepare($sql);
-        return $stmt->execute([
+        $resultado = $stmt->execute([
             $data['codigo'],
             $data['descripcion'],
             $data['unidad_medida'],
@@ -84,6 +105,8 @@ class Producto {
             $data['activo'],
             $id
         ]);
+
+        return $resultado;
     }
 
     public function eliminar($id) {
@@ -92,4 +115,4 @@ class Producto {
         return $stmt->execute([$id]);
     }
 }
-
+?>

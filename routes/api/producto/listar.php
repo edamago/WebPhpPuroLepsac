@@ -1,8 +1,10 @@
 <?php
-require_once '../../../models/ProductoModel.php';
+// Usar $_SERVER['DOCUMENT_ROOT'] para obtener la ruta completa del archivo
+require_once $_SERVER['DOCUMENT_ROOT'] . '/pro/controllers/api/ProductoApiController.php';
 
-header('Content-Type: application/json');
+// Crear una instancia del controlador
+$productoApiController = new ProductoApiController();
 
-$producto = new Producto();
-$resultado = $producto->listar();
-echo json_encode($resultado);
+// Llamar al método de manejar la solicitud de listado
+$productoApiController->handleRequest('listar');
+?>

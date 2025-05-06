@@ -1,5 +1,5 @@
 <?php
-require_once '../../../models/ProductoModel.php';
+require_once $_SERVER['DOCUMENT_ROOT'] . '/pro/controllers/api/ProductoApiController.php';
 
 header('Content-Type: application/json');
 
@@ -29,9 +29,7 @@ if (!empty($faltantes)) {
     exit;
 }
 
-// Crear una instancia del modelo y realizar la actualización
-$producto = new Producto();
-$exito = $producto->actualizar($id, $data);
+// Crear una instancia del controlador y llamar al método para actualizar el producto
+$productoApiController = new ProductoApiController();
+$productoApiController->handleRequest('actualizar');
 
-// Responder con el resultado de la actualización
-echo json_encode(['success' => $exito]);
