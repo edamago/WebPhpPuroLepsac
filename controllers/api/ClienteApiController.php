@@ -1,67 +1,58 @@
 <?php
 require_once __DIR__ . '/../../vendor/autoload.php';
 
-require_once __DIR__ . '/../../models/ProductoModel.php';
+require_once __DIR__ . '/../../models/ClienteModel.php';
 
-//use Firebase\JWT\JWT;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 use Firebase\JWT\ExpiredException;
 
-class ProductoApiController {
+class ClienteApiController {
     private $model;
 
     public function __construct() {
-        $this->model = new Producto();
+        $this->model = new Cliente();
     }
 
-    // Métodos reutilizables para el servicio
-    public function listarProductos() {
+    public function listarClientes() {
         return $this->model->listar();
     }
 
-    public function obtenerProductoPorId($id) {
+    public function obtenerClientePorId($id) {
         return $this->model->obtener($id);
     }
 
-    public function insertarProducto($data) {
+    public function insertarCliente($data) {
         return $this->model->insertar($data);
     }
 
-    public function actualizarProductoPorId($id, $data) {
-        $productoExistente = $this->model->obtenerPorCodigo($data['codigo']);
-        if ($productoExistente && $productoExistente['id'] != $id) {
-            return ["error" => "El código del producto ya está en uso por otro producto."];
-        }
+    public function actualizarClientePorId($id, $data) {
         return $this->model->actualizar($id, $data);
     }
 
-    public function eliminarProducto($id) {
+    public function eliminarCliente($id) {
         return $this->model->eliminar($id);
     }
 
-    // ✅ Validar token desde el header
     public function validarToken() {
-        // Obtener los headers de la petición
         $headers = getallheaders();
         $authHeader = $headers['Authorization'] ?? $headers['authorization'] ?? null;
-    
+
         if (!$authHeader || !str_starts_with($authHeader, 'Bearer ')) {
             http_response_code(401);
             echo json_encode(['error' => 'Token no proporcionado o mal formado']);
             exit;
         }
-    
-        // Extraer el token quitando 'Bearer '
+
         $token = trim(str_replace('Bearer', '', $authHeader));
-    
+
         try {
             $config = include __DIR__ . '/../../config/config.php';
             $jwt_secret = $config['jwt_secret'];
-    
+
             $decoded = JWT::decode($token, new Key($jwt_secret, 'HS256'));
-    
-            return $decoded; // Retorna el payload si es necesario usarlo luego
+
+            return $decoded;
         } catch (ExpiredException $e) {
             http_response_code(401);
             echo json_encode(['error' => 'Token expirado']);
@@ -73,16 +64,14 @@ class ProductoApiController {
         }
     }
 
-    // Manejo de API (respuestas JSON para solicitudes HTTP)
     public function handleRequest($action) {
         header('Content-Type: application/json');
 
-        // ✅ Validación de token antes de todo
         $this->validarToken();
 
         switch ($action) {
             case 'listar':
-                echo json_encode($this->listarProductos());
+                echo json_encode($this->listarClientes());
                 break;
 
             case 'obtener':
@@ -90,29 +79,24 @@ class ProductoApiController {
                 if (!$id) {
                     $this->error("ID es requerido", 400);
                 } else {
-                    $producto = $this->obtenerProductoPorId($id);
-                    if ($producto) {
-                        echo json_encode($producto);
+                    $cliente = $this->obtenerClientePorId($id);
+                    if ($cliente) {
+                        echo json_encode($cliente);
                     } else {
-                        $this->error("Producto no encontrado", 404);
+                        $this->error("Cliente no encontrado", 404);
                     }
                 }
                 break;
 
             case 'crear':
                 $data = json_decode(file_get_contents("php://input"), true);
-                if (empty($data['codigo']) || empty($data['descripcion'])) {
+                if (empty($data)) {
                     $this->error("Datos incompletos", 400);
                 } else {
-                    $productoExistente = $this->model->obtenerPorCodigo($data['codigo']);
-                    if ($productoExistente) {
-                        $this->error("El producto con este código ya existe", 400);
+                    if ($this->insertarCliente($data)) {
+                        echo json_encode(["mensaje" => "Cliente creado"]);
                     } else {
-                        if ($this->insertarProducto($data)) {
-                            echo json_encode(["mensaje" => "Producto creado"]);
-                        } else {
-                            $this->error("Error al crear el producto", 500);
-                        }
+                        $this->error("Error al crear el cliente", 500);
                     }
                 }
                 break;
@@ -126,11 +110,10 @@ class ProductoApiController {
                     if (empty($data)) {
                         $this->error("Datos incompletos para actualizar", 400);
                     } else {
-                        $resultado = $this->actualizarProductoPorId($id, $data);
-                        if (isset($resultado['error'])) {
-                            $this->error($resultado['error'], 400);
+                        if ($this->actualizarClientePorId($id, $data)) {
+                            echo json_encode(["mensaje" => "Cliente actualizado"]);
                         } else {
-                            echo json_encode(["mensaje" => "Producto actualizado"]);
+                            $this->error("Error al actualizar el cliente", 500);
                         }
                     }
                 }
@@ -141,10 +124,10 @@ class ProductoApiController {
                 if (!$id) {
                     $this->error("ID es requerido", 400);
                 } else {
-                    if ($this->eliminarProducto($id)) {
-                        echo json_encode(["mensaje" => "Producto eliminado"]);
+                    if ($this->eliminarCliente($id)) {
+                        echo json_encode(["mensaje" => "Cliente eliminado"]);
                     } else {
-                        $this->error("Error al eliminar el producto", 500);
+                        $this->error("Error al eliminar el cliente", 500);
                     }
                 }
                 break;

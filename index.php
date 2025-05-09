@@ -76,6 +76,40 @@ if (strpos($request_uri, $api_prefix) === 0) {
             default:
                 echo json_encode(['error' => 'Acción no reconocida en auth']);
         }
+    } elseif ($segments[0] === 'cliente') { // Nueva lógica para cliente
+        $id = $segments[1] ?? null;
+
+        switch ($method) {
+            case 'GET':
+                if ($id) {
+                    $_GET['id'] = $id;
+                    require_once 'routes/api/cliente/obtener.php';
+                } else {
+                    require_once 'routes/api/cliente/listar.php';
+                }
+                break;
+            case 'POST':
+                require_once 'routes/api/cliente/crear.php';
+                break;
+            case 'PUT':
+                if ($id) {
+                    $_GET['id'] = $id;
+                    require_once 'routes/api/cliente/actualizar.php';
+                } else {
+                    echo json_encode(['error' => 'ID no especificado en la ruta']);
+                }
+                break;
+            case 'DELETE':
+                if ($id) {
+                    $_GET['id'] = $id;
+                    require_once 'routes/api/cliente/eliminar.php';
+                } else {
+                    echo json_encode(['error' => 'ID no especificado en la ruta']);
+                }
+                break;
+            default:
+                echo json_encode(['error' => 'Método no soportado']);
+        }
     } else {
         http_response_code(404);
         echo json_encode(['error' => 'Ruta de la API no encontrada']);
