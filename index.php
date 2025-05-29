@@ -1,4 +1,15 @@
 <?php
+// index.php
+header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
+header("Access-Control-Allow-Headers: Content-Type, Authorization");
+
+
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit();
+}
+
 $request_uri = $_SERVER['REQUEST_URI'];
 $api_prefix = '/pro/api/';
 
@@ -14,13 +25,25 @@ if (strpos($request_uri, $api_prefix) === 0) {
 
         switch ($method) {
             case 'GET':
-                if ($id) {
-                    $_GET['id'] = $id;
-                    require_once 'routes/api/producto/obtener.php';
+                if (isset($segments[1])) {
+                    if ($segments[1] === 'codigo' && isset($segments[2])) {
+                        // Si la ruta es /producto/codigo/{codigo}
+                        $_GET['codigo'] = $segments[2];
+                        require_once 'routes/api/producto/obtenerPorCodigo.php';
+                    } elseif (is_numeric($segments[1])) {
+                        // Ruta /producto/{id} (numérico)
+                        $_GET['id'] = (int)$segments[1];
+                        require_once 'routes/api/producto/obtener.php';
+                    } else {
+                        // Por si acaso es otro valor que no esperamos
+                        echo json_encode(['error' => 'Parámetro no válido para GET producto']);
+                    }
                 } else {
+                    // Si no hay segmento 1, listar todos
                     require_once 'routes/api/producto/listar.php';
                 }
                 break;
+
             case 'POST':
                 require_once 'routes/api/producto/crear.php';
                 break;

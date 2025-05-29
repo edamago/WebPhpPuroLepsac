@@ -16,19 +16,22 @@ class Database {
         $this->username = $config['db']['user'];
         $this->password = $config['db']['password'];
 
-        // Activar modo estricto de errores para mysqli
-        mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
-        
-        // Conexión usando mysqli
-        $this->conn = new mysqli($this->host, $this->username, $this->password, $this->db_name);
 
-        if ($this->conn->connect_error) {
-            error_log("Database connection error: " . $this->conn->connect_error);
-            die("Error de conexión a la base de datos.");
+        if (class_exists('PDO')) {
+            echo "PDO está habilitado<br>";
+            print_r(PDO::getAvailableDrivers());
+        } else {
+            echo "PDO no está habilitado";
         }
 
-        // Opcional: establecer charset utf8
-        $this->conn->set_charset("utf8");
+
+        try {
+            $this->conn = new PDO("mysql:host={$this->host};dbname={$this->db_name};charset=utf8", $this->username, $this->password);
+            $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        } catch (PDOException $e) {
+            error_log("Database connection error: " . $e->getMessage());
+            die("Error de conexión a la base de datos.");
+        }
     }
 
     public static function getInstance() {
@@ -45,6 +48,7 @@ class Database {
     private function __clone() {}
 
     public function __wakeup() {
+        // Este método está definido para evitar la deserialización de la instancia de la clase.
         throw new Exception("Deserialización no permitida.");
     }
 }

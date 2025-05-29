@@ -13,23 +13,77 @@ class Pedido {
 
     public function crear($data) {
         $sql = "INSERT INTO $this->table (fecha, atencion, moneda, subtotal, igv, total, comentario, enviado, estado, t_cliente_id)
-                VALUES (:fecha, :atencion, :moneda, :subtotal, :igv, :total, :comentario, :enviado, :estado, :t_cliente_id)";
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         $stmt = $this->conn->prepare($sql);
-        $stmt->execute([
-            ':fecha' => $data['fecha'],
-            ':atencion' => $data['atencion'],
-            ':moneda' => $data['moneda'],
-            ':subtotal' => $data['subtotal'],
-            ':igv' => $data['igv'],
-            ':total' => $data['total'],
-            ':comentario' => $data['comentario'],
-            ':enviado' => $data['enviado'],
-            ':estado' => $data['estado'],
-            ':t_cliente_id' => $data['t_cliente_id']
-        ]);
+        $stmt->bind_param(
+            "ssssddsssi",
+            $data['fecha'],
+            $data['atencion'],
+            $data['moneda'],
+            $data['subtotal'],
+            $data['igv'],
+            $data['total'],
+            $data['comentario'],
+            $data['enviado'],
+            $data['estado'],
+            $data['t_cliente_id']
+        );
+        $stmt->execute();
 
-        return $this->conn->lastInsertId();
+        return $this->conn->insert_id;
+    }
+
+    public function listar() {
+        $sql = "SELECT * FROM $this->table ORDER BY fecha DESC";
+        $result = $this->conn->query($sql);
+        return $result->fetch_all(MYSQLI_ASSOC);
+    }
+
+    public function obtener($id) {
+        $stmt = $this->conn->prepare("SELECT * FROM $this->table WHERE id = ?");
+        $stmt->bind_param("i", $id);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        return $result->fetch_assoc();
+    }
+
+    public function eliminar($id) {
+        $stmt = $this->conn->prepare("DELETE FROM t_pedido WHERE id = ?");
+        $stmt->bind_param("i", $id);
+        $stmt->execute();
+    }
+
+    public function actualizar($pedidoData) {
+        $sql = "UPDATE t_pedido SET
+            fecha = ?,
+            atencion = ?,
+            moneda = ?,
+            subtotal = ?,
+            igv = ?,
+            total = ?,
+            comentario = ?,
+            enviado = ?,
+            estado = ?,
+            t_cliente_id = ?
+            WHERE id = ?";
+
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bind_param(
+            "ssssddsssii",
+            $pedidoData["fecha"],
+            $pedidoData["atencion"],
+            $pedidoData["moneda"],
+            $pedidoData["subtotal"],
+            $pedidoData["igv"],
+            $pedidoData["total"],
+            $pedidoData["comentario"],
+            $pedidoData["enviado"],
+            $pedidoData["estado"],
+            $pedidoData["t_cliente_id"],
+            $pedidoData["id"]
+        );
+        $stmt->execute();
     }
 
     public function getConnection() {

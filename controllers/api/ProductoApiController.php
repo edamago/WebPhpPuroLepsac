@@ -1,9 +1,8 @@
 <?php
 require_once __DIR__ . '/../../vendor/autoload.php';
-
 require_once __DIR__ . '/../../models/ProductoModel.php';
+require_once __DIR__ . '/../../helpers/AuthHelper.php';
 
-//use Firebase\JWT\JWT;
 use Firebase\JWT\JWT;
 use Firebase\JWT\Key;
 use Firebase\JWT\ExpiredException;
@@ -13,6 +12,17 @@ class ProductoApiController {
 
     public function __construct() {
         $this->model = new Producto();
+
+        // ✅✅✅ Agrega CORS en todas las respuestas
+        //header("Access-Control-Allow-Origin: http://localhost:81");
+        //header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
+        //header("Access-Control-Allow-Headers: Content-Type, Authorization");
+        
+        // ✅✅✅ Responde a preflight OPTIONS y termina
+        //if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+        //    http_response_code(200);
+        //    exit();
+        //}
     }
 
     // Métodos reutilizables para el servicio
@@ -22,6 +32,10 @@ class ProductoApiController {
 
     public function obtenerProductoPorId($id) {
         return $this->model->obtener($id);
+    }
+
+    public function obtenerProductoPorCodigo($codigo) {
+        return $this->model->obtenerPorCodigo($codigo);
     }
 
     public function insertarProducto($data) {
@@ -40,45 +54,11 @@ class ProductoApiController {
         return $this->model->eliminar($id);
     }
 
-    // ✅ Validar token desde el header
-    public function validarToken() {
-        // Obtener los headers de la petición
-        $headers = getallheaders();
-        $authHeader = $headers['Authorization'] ?? $headers['authorization'] ?? null;
-    
-        if (!$authHeader || !str_starts_with($authHeader, 'Bearer ')) {
-            http_response_code(401);
-            echo json_encode(['error' => 'Token no proporcionado o mal formado']);
-            exit;
-        }
-    
-        // Extraer el token quitando 'Bearer '
-        $token = trim(str_replace('Bearer', '', $authHeader));
-    
-        try {
-            $config = include __DIR__ . '/../../config/config.php';
-            $jwt_secret = $config['jwt_secret'];
-    
-            $decoded = JWT::decode($token, new Key($jwt_secret, 'HS256'));
-    
-            return $decoded; // Retorna el payload si es necesario usarlo luego
-        } catch (ExpiredException $e) {
-            http_response_code(401);
-            echo json_encode(['error' => 'Token expirado']);
-            exit;
-        } catch (Exception $e) {
-            http_response_code(401);
-            echo json_encode(['error' => 'Token no válido']);
-            exit;
-        }
-    }
-
-    // Manejo de API (respuestas JSON para solicitudes HTTP)
     public function handleRequest($action) {
         header('Content-Type: application/json');
 
         // ✅ Validación de token antes de todo
-        $this->validarToken();
+        AuthHelper::validarToken();
 
         switch ($action) {
             case 'listar':
@@ -95,6 +75,20 @@ class ProductoApiController {
                         echo json_encode($producto);
                     } else {
                         $this->error("Producto no encontrado", 404);
+                    }
+                }
+                break;
+
+            case 'obtenerPorCodigo':
+                $codigo = $_GET['codigo'] ?? null;
+                if (!$codigo) {
+                    $this->error("Código es requerido", 400);
+                } else {
+                    $producto = $this->obtenerProductoPorCodigo($codigo);
+                    if ($producto) {
+                        echo json_encode($producto);
+                    } else {
+                        $this->error("Producto no encontrado con este código", 404);
                     }
                 }
                 break;

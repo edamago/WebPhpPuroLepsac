@@ -11,31 +11,52 @@ class Producto {
     }
 
     public function listar() {
-        $stmt = $this->conn->prepare("SELECT * FROM $this->table WHERE activo = 1");
+        $sql = "SELECT * FROM $this->table";
+        $stmt = $this->conn->prepare($sql);
+
+        if (!$stmt) {
+            return ["error" => "Error en la preparación de la consulta"];
+        }
+
         $stmt->execute();
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $result = $stmt->get_result();
+
+        if ($result) {
+            return $result->fetch_all(MYSQLI_ASSOC);
+        } else {
+            return [];
+        }
     }
 
     public function obtener($id) {
         $stmt = $this->conn->prepare("SELECT * FROM $this->table WHERE id = ?");
-        $stmt->execute([$id]);
-        return $stmt->fetch(PDO::FETCH_ASSOC);
+        $stmt->bind_param("i", $id);
+        $stmt->execute();
+        $resultado = $stmt->get_result();
+        return $resultado->fetch_assoc();
     }
 
     public function obtenerPorCodigo($codigo) {
         $stmt = $this->conn->prepare("SELECT * FROM $this->table WHERE codigo = ?");
-        $stmt->execute([$codigo]);
-        return $stmt->fetch(PDO::FETCH_ASSOC);
+        $stmt->bind_param("s", $codigo);
+        $stmt->execute();
+        $resultado = $stmt->get_result();
+        return $resultado->fetch_assoc();
     }
 
-    // Validar si el código ya existe (excluyendo el producto actual si es una actualización)
     public function verificarCodigoExistente($codigo, $idExcluido = null) {
-        // Consulta para verificar si el código ya está en uso por otro producto
-        $query = "SELECT COUNT(*) FROM $this->table WHERE codigo = ? AND id != ?";
-        $stmt = $this->conn->prepare($query);
-        $stmt->execute([$codigo, $idExcluido]);
-        $resultado = $stmt->fetchColumn();
-        return $resultado > 0; // Si hay productos con el mismo código, retorna true
+        if ($idExcluido !== null) {
+            $stmt = $this->conn->prepare("SELECT COUNT(*) as total FROM $this->table WHERE codigo = ? AND id != ?");
+            $stmt->bind_param("si", $codigo, $idExcluido);
+        } else {
+            $stmt = $this->conn->prepare("SELECT COUNT(*) as total FROM $this->table WHERE codigo = ?");
+            $stmt->bind_param("s", $codigo);
+        }
+
+        $stmt->execute();
+        $resultado = $stmt->get_result();
+        $fila = $resultado->fetch_assoc();
+        return $fila['total'] > 0;
     }
 
     public function insertar($data) {
@@ -44,7 +65,8 @@ class Producto {
                 (codigo, descripcion, unidad_medida, stock_minimo, stock_maximo, peso_bruto, peso_neto, alto, ancho, profundo, clasif_demanda, clasif_comercial, comentarios, estado, activo)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 
-            $resultado = $stmt->execute([
+            $stmt->bind_param(
+                "sssiiidddssssss",
                 $data['codigo'],
                 $data['descripcion'],
                 $data['unidad_medida'],
@@ -60,11 +82,12 @@ class Producto {
                 $data['comentarios'],
                 $data['estado'],
                 $data['activo']
-            ]);
+            );
 
-            return $resultado;
-        } catch (PDOException $e) {
-            if ($e->getCode() == '23000') { // Código de error SQLSTATE para violación de clave única
+            $stmt->execute();
+            return true;
+        } catch (mysqli_sql_exception $e) {
+            if ($e->getCode() == 1062) {
                 return ['error' => 'El código del producto ya existe.'];
             }
             error_log($e->getMessage());
@@ -73,46 +96,63 @@ class Producto {
     }
 
     public function actualizar($id, $data) {
-        // Validamos si el código ya está en uso por otro producto
-        if ($this->verificarCodigoExistente($data['codigo'], $id)) {
-            return ['error' => 'El código del producto ya está en uso.'];
-        }
-
-        // Si el código es único, se realiza la actualización
-        $sql = "UPDATE $this->table SET 
-            codigo = ?, 
-            descripcion = ?, unidad_medida = ?, stock_minimo = ?, stock_maximo = ?, 
-            peso_bruto = ?, peso_neto = ?, alto = ?, ancho = ?, profundo = ?, 
-            clasif_demanda = ?, clasif_comercial = ?, comentarios = ?, estado = ?, activo = ?
-            WHERE id = ?";
-    
-        $stmt = $this->conn->prepare($sql);
-        $resultado = $stmt->execute([
-            $data['codigo'],
-            $data['descripcion'],
-            $data['unidad_medida'],
-            $data['stock_minimo'],
-            $data['stock_maximo'],
-            $data['peso_bruto'],
-            $data['peso_neto'],
-            $data['alto'],
-            $data['ancho'],
-            $data['profundo'],
-            $data['clasif_demanda'],
-            $data['clasif_comercial'],
-            $data['comentarios'],
-            $data['estado'],
-            $data['activo'],
-            $id
-        ]);
-
-        return $resultado;
+    if ($this->verificarCodigoExistente($data['codigo'], $id)) {
+        return ['error' => 'El código del producto ya está en uso.'];
     }
 
+    $sql = "UPDATE $this->table SET 
+        codigo = ?, descripcion = ?, unidad_medida = ?, stock_minimo = ?, stock_maximo = ?, 
+        peso_bruto = ?, peso_neto = ?, alto = ?, ancho = ?, profundo = ?, 
+        clasif_demanda = ?, clasif_comercial = ?, comentarios = ?, estado = ?, activo = ?
+        WHERE id = ?";
+
+    $stmt = $this->conn->prepare($sql);
+    $stmt->bind_param(
+        "sssiiidddssssssi",
+        $data['codigo'],
+        $data['descripcion'],
+        $data['unidad_medida'],
+        $data['stock_minimo'],
+        $data['stock_maximo'],
+        $data['peso_bruto'],
+        $data['peso_neto'],
+        $data['alto'],
+        $data['ancho'],
+        $data['profundo'],
+        $data['clasif_demanda'],
+        $data['clasif_comercial'],
+        $data['comentarios'],
+        $data['estado'],
+        $data['activo'],
+        $id
+    );
+
+    $stmt->execute();
+
+    if ($stmt->affected_rows === 0) {
+        // Verificamos si el producto con ese ID existe
+        $verificarStmt = $this->conn->prepare("SELECT COUNT(*) as total FROM $this->table WHERE id = ?");
+        $verificarStmt->bind_param("i", $id);
+        $verificarStmt->execute();
+        $resultado = $verificarStmt->get_result();
+        $fila = $resultado->fetch_assoc();
+
+        if ($fila['total'] === 0) {
+            return ['error' => 'No se encontró el producto con el ID especificado.'];
+        } else {
+            // Los datos existen, pero no hubo cambios. Lo consideramos éxito, no error.
+            return true;
+        }
+    }
+
+    return true;
+}
+
+
     public function eliminar($id) {
-        // Baja lógica: desactiva el producto
         $stmt = $this->conn->prepare("UPDATE $this->table SET activo = 0 WHERE id = ?");
-        return $stmt->execute([$id]);
+        $stmt->bind_param("i", $id);
+        return $stmt->execute();
     }
 }
 ?>

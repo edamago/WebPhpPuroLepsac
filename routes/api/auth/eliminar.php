@@ -1,36 +1,29 @@
 <?php
 header('Content-Type: application/json');
-//require_once '../../../controllers/api/AuthApiController.php';
-require_once $_SERVER['DOCUMENT_ROOT'] . '/pro/controllers/api/AuthApiController.php';
 
-$headers = getallheaders();
+require_once $_SERVER['DOCUMENT_ROOT'] . '/pro/controllers/api/AuthApiController.php';
+require_once $_SERVER['DOCUMENT_ROOT'] . '/pro/helpers/AuthHelper.php';
+
+try {
+    // Validar el token
+    AuthHelper::validarToken(); // Esto lanza un error si el token no es válido
+} catch (Exception $e) {
+    http_response_code(401);
+    echo json_encode(['error' => $e->getMessage()]);
+    exit;
+}
+
 $controller = new AuthApiController();
 
-// Validar el token antes de continuar
-if (!isset($headers['Authorization'])) {
-    http_response_code(401);
-    echo json_encode(['error' => 'Token no proporcionado']);
-    exit;
-}
-
-$token = str_replace('Bearer ', '', $headers['Authorization']);
-$usuarioAutenticado = $controller->verificar_token($token);
-
-if (!$usuarioAutenticado) {
-    http_response_code(401);
-    echo json_encode(['error' => 'Token no válido']);
-    exit;
-}
-
 // Obtener el ID del usuario desde la URL
-$requestUri = $_SERVER['REQUEST_URI']; // Obtener la URI completa de la solicitud
-$uriParts = explode('/', $requestUri); // Dividir la URI en partes
-$id = end($uriParts); // Obtener el último segmento, que es el ID
+$requestUri = $_SERVER['REQUEST_URI'];
+$uriParts = explode('/', $requestUri);
+$id = end($uriParts);
 
 // Verificar que se haya proporcionado un ID
-if (empty($id)) {
+if (empty($id) || !is_numeric($id)) {
     http_response_code(400);
-    echo json_encode(['error' => 'ID de usuario no proporcionado']);
+    echo json_encode(['error' => 'ID de usuario no proporcionado o inválido']);
     exit;
 }
 
