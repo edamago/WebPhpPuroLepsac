@@ -41,6 +41,28 @@ class Cliente {
     }
 }
 
+    public function obtenerPorDocumento($documento) {
+        $stmt = $this->conn->prepare("SELECT * FROM $this->table WHERE documento = ?");
+        $stmt->bind_param("s", $documento);
+        $stmt->execute();
+        $resultado = $stmt->get_result();
+        return $resultado->fetch_assoc();
+    }
+
+    public function verificarDocumentoExistente($documento, $idExcluido = null) {
+        if ($idExcluido !== null) {
+            $stmt = $this->conn->prepare("SELECT COUNT(*) as total FROM $this->table WHERE documento = ? AND id != ?");
+            $stmt->bind_param("si", $documento, $idExcluido);
+        } else {
+            $stmt = $this->conn->prepare("SELECT COUNT(*) as total FROM $this->table WHERE documento = ?");
+            $stmt->bind_param("s", $documento);
+        }
+
+        $stmt->execute();
+        $resultado = $stmt->get_result();
+        $fila = $resultado->fetch_assoc();
+        return $fila['total'] > 0;
+    }
 
     public function insertar($data) {
     $sql = "INSERT INTO $this->table 

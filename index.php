@@ -104,10 +104,21 @@ if (strpos($request_uri, $api_prefix) === 0) {
 
         switch ($method) {
             case 'GET':
-                if ($id) {
-                    $_GET['id'] = $id;
-                    require_once 'routes/api/cliente/obtener.php';
+                if (isset($segments[1])) {
+                    if ($segments[1] === 'documento' && isset($segments[2])) {
+                        // Si la ruta es /cliente/documento/{documento}
+                        $_GET['documento'] = $segments[2];
+                        require_once 'routes/api/cliente/obtenerPorDocumento.php';
+                    } elseif (is_numeric($segments[1])) {
+                        // Ruta /cliente/{id} (numérico)
+                        $_GET['id'] = (int)$segments[1];
+                        require_once 'routes/api/cliente/obtener.php';
+                    } else {
+                        // Por si acaso es otro valor que no esperamos
+                        echo json_encode(['error' => 'Parámetro no válido para GET producto']);
+                    }
                 } else {
+                    // Si no hay segmento 1, listar todos
                     require_once 'routes/api/cliente/listar.php';
                 }
                 break;

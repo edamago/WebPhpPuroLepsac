@@ -22,6 +22,10 @@ class ClienteApiController {
         return $this->model->obtener($id);
     }
 
+    public function obtenerClientePorDocumento($documento) {
+        return $this->model->obtenerPorDocumento($documento);
+    }
+
     public function insertarCliente($data) {
     $resultado = $this->model->insertar($data);
 
@@ -134,7 +138,21 @@ class ClienteApiController {
                     }
                 }
                 break;
-
+            
+            case 'obtenerPorDocumento':
+                $documento = $_GET['documento'] ?? null;
+                if (!$documento) {
+                    $this->error("documento es requerido", 400);
+                } else {
+                    $cliente = $this->obtenerClientePorDocumento($documento);
+                    if ($cliente) {
+                        echo json_encode($cliente);
+                    } else {
+                        $this->error("Cliente no encontrado con este código", 404);
+                    }
+                }
+                break;
+                
             case 'crear':
             $data = json_decode(file_get_contents("php://input"), true);
             if (empty($data)) {
